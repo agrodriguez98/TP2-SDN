@@ -29,10 +29,13 @@ class Firewall (EventMixin):
 
     def _handle_ConnectionUp (self, event):
         ''' Add your logic here ... '''
-
-
-
         log.debug("Firewall rules installed on %s", dpidToStr(event.dpid))
+
+        msg = of.ofp_flow_mod()
+        msg.match.dl_type = 0x800
+        msg.match.nw_proto = 6
+        msg.match.tp_dst = 80
+        event.connection.send(msg)
 
 def launch ():
     '''

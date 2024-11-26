@@ -20,6 +20,20 @@ log = core.getLogger()
 policyFile = "%s/pox/pox/misc/firewall-policies.csv" % os.environ[ 'HOME' ]
 
 ''' Add your global variables here ... '''
+UDP = 17
+TCP = 6
+IPV4 = 0x800
+
+def block_dst_port(port, protocol, event):
+    msg = of.ofp_flow_mod()
+    msg.match.dl_type = IPV4
+    msg.match.nw_proto = protocol
+    msg.match.tp_dst = port
+    event.connection.send(msg)
+
+def rule_1(event):
+    block_dst_port(80, TCP, event)
+    block_dst_port(80, UDP, event)
 
 class Firewall (EventMixin):
 
@@ -31,11 +45,7 @@ class Firewall (EventMixin):
         ''' Add your logic here ... '''
         log.debug("Firewall rules installed on %s", dpidToStr(event.dpid))
 
-        msg = of.ofp_flow_mod()
-        msg.match.dl_type = 0x800
-        msg.match.nw_proto = 6
-        msg.match.tp_dst = 80
-        event.connection.send(msg)
+        rule_1(event)
 
 def launch ():
     '''

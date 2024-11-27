@@ -40,6 +40,15 @@ def block_pair_of_hosts(src_address, dst_address, event):
     msg.match.nw_dst = IPAddr(dst_address)
     event.connection.send(msg)
 
+def read_rule3_policies():
+    pairs = []
+    with open("rule3_policies.csv", "r") as file:
+        for line in file.readlines()[1:]:
+            line_data = line.split(',')
+            pair = (line_data[1], line_data[2])
+            pairs.append(pair)
+    return pairs
+
 def rule_1(event):
     block_src_address_dst_port(None, 80, TCP, event)
     block_src_address_dst_port(None, 80, UDP, event)
@@ -48,8 +57,10 @@ def rule_2(event):
     block_src_address_dst_port("10.0.0.1", 5001, UDP, event)
 
 def rule_3(event):
-    block_pair_of_hosts("10.0.0.1", "10.0.0.2", event)
-    block_pair_of_hosts("10.0.0.2", "10.0.0.1", event)
+    pairs = read_rule3_policies()
+    for pair in pairs:
+        block_pair_of_hosts(pair[0], pair[1], event)
+        block_pair_of_hosts(pair[1], pair[0], event)
 
 class Firewall (EventMixin):
 

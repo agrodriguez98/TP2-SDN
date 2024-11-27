@@ -33,12 +33,23 @@ def block_src_address_dst_port(address, port, protocol, event):
     msg.match.tp_dst = port
     event.connection.send(msg)
 
+def block_pair_of_hosts(src_address, dst_address, event):
+    msg = of.ofp_flow_mod()
+    msg.match.dl_type = IPV4
+    msg.match.nw_src = IPAddr(src_address)
+    msg.match.nw_dst = IPAddr(dst_address)
+    event.connection.send(msg)
+
 def rule_1(event):
     block_src_address_dst_port(None, 80, TCP, event)
     block_src_address_dst_port(None, 80, UDP, event)
 
 def rule_2(event):
     block_src_address_dst_port("10.0.0.1", 5001, UDP, event)
+
+def rule_3(event):
+    block_pair_of_hosts("10.0.0.1", "10.0.0.2", event)
+    block_pair_of_hosts("10.0.0.2", "10.0.0.1", event)
 
 class Firewall (EventMixin):
 
@@ -48,10 +59,11 @@ class Firewall (EventMixin):
 
     def _handle_ConnectionUp (self, event):
         ''' Add your logic here ... '''
-        log.debug("Firewall rules installed on %s", dpidToStr(event.dpid))
-
         rule_1(event)
         rule_2(event)
+        rule_3(event)
+
+        log.debug("Firewall rules installed on %s", dpidToStr(event.dpid))
 
 def launch ():
     '''

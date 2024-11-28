@@ -64,20 +64,24 @@ def rule_3(event):
 
 class Firewall (EventMixin):
 
-    def __init__ (self):
+    def __init__ (self, switch_id):
         self.listenTo(core.openflow)
+        self.switch_id = switch_id
         log.debug("Enabling Firewall Module")
 
     def _handle_ConnectionUp (self, event):
         ''' Add your logic here ... '''
+        if event.dpid != self.switch_id:
+            return
+
         rule_1(event)
         rule_2(event)
         rule_3(event)
 
         log.debug("Firewall rules installed on %s", dpidToStr(event.dpid))
 
-def launch ():
+def launch (switch_id = 1):
     '''
     Starting the Firewall module
     '''
-    core.registerNew(Firewall)
+    core.registerNew(Firewall, switch_id)
